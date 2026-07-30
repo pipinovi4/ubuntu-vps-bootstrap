@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-readonly TOOLKIT_NAME="ubuntu-vps-bootstrap"
 DRY_RUN="${DRY_RUN:-false}"
 VERBOSE="${VERBOSE:-false}"
 declare -a COMPLETED_STEPS=()
@@ -18,7 +17,11 @@ warn() {
   log WARN "$@"
 }
 success() { log SUCCESS "$@"; }
-debug() { [[ "$VERBOSE" == "true" ]] && log DEBUG "$@" || :; }
+debug() {
+  if [[ "$VERBOSE" == "true" ]]; then
+    log DEBUG "$@"
+  fi
+}
 die() {
   log ERROR "$*"
   return 1
@@ -29,7 +32,7 @@ on_error() {
   log ERROR "Command failed (status=${status}, line=${line}): ${command}"
 }
 
-run() {
+run_cmd() {
   if [[ "$DRY_RUN" == "true" ]]; then
     printf '[DRY-RUN]'
     printf ' %q' "$@"
@@ -56,7 +59,7 @@ backup_file() {
   local path="$1" backup
   [[ -e "$path" ]] || return 0
   backup="${path}.bak.$(date -u +%Y%m%dT%H%M%SZ)"
-  run cp --preserve=mode,ownership,timestamps -- "$path" "$backup"
+  run_cmd cp --preserve=mode,ownership,timestamps -- "$path" "$backup"
 }
 
 install_if_changed() {
@@ -66,8 +69,8 @@ install_if_changed() {
     return 0
   fi
   backup_file "$target"
-  run install -D -m "$mode" -o "$owner" -g "$group" -- "$source" "${target}.tmp"
-  run mv -f -- "${target}.tmp" "$target"
+  run_cmd install -D -m "$mode" -o "$owner" -g "$group" -- "$source" "${target}.tmp"
+  run_cmd mv -f -- "${target}.tmp" "$target"
 }
 
 join_by() {

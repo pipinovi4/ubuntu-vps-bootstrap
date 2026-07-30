@@ -1,20 +1,38 @@
 #!/usr/bin/env bash
 
+# These defaults are consumed by scripts that source this library. ShellCheck
+# analyzes this file independently and cannot see every cross-file reference.
+# shellcheck disable=SC2034
 APP_NAME="my-app"
+# shellcheck disable=SC2034
 DEPLOY_USER="deploy"
+# shellcheck disable=SC2034
 APP_ROOT="/opt/apps"
+# shellcheck disable=SC2034
 SSH_PORT="22"
+# shellcheck disable=SC2034
 ENABLE_SYSTEM_UPGRADE="false"
+# shellcheck disable=SC2034
 ENABLE_SWAP="true"
+# shellcheck disable=SC2034
 SWAP_SIZE_GB="2"
+# shellcheck disable=SC2034
 ENABLE_UFW="true"
+# shellcheck disable=SC2034
 ENABLE_FAIL2BAN="true"
+# shellcheck disable=SC2034
 ENABLE_UNATTENDED_UPGRADES="true"
+# shellcheck disable=SC2034
 ENABLE_SSH_HARDENING="false"
+# shellcheck disable=SC2034
 GIT_REPOSITORY=""
+# shellcheck disable=SC2034
 GIT_BRANCH="main"
+# shellcheck disable=SC2034
 HEALTHCHECK_URL="http://127.0.0.1/health"
+# shellcheck disable=SC2034
 HEALTHCHECK_ATTEMPTS="30"
+# shellcheck disable=SC2034
 HEALTHCHECK_INTERVAL_SECONDS="2"
 
 readonly CONFIG_KEYS="APP_NAME DEPLOY_USER APP_ROOT SSH_PORT ENABLE_SYSTEM_UPGRADE ENABLE_SWAP SWAP_SIZE_GB ENABLE_UFW ENABLE_FAIL2BAN ENABLE_UNATTENDED_UPGRADES ENABLE_SSH_HARDENING GIT_REPOSITORY GIT_BRANCH HEALTHCHECK_URL HEALTHCHECK_ATTEMPTS HEALTHCHECK_INTERVAL_SECONDS"
@@ -63,7 +81,7 @@ load_config() {
       die "Unknown configuration key: $key"
       return 1
     }
-    [[ "$value" != *'$('* && "$value" != *'`'* && "$value" != *$'\n'* ]] ||
+    [[ "$value" != *"\$("* && "$value" != *"\`"* && "$value" != *$'\n'* ]] ||
       {
         die "Unsafe value for $key"
         return 1
@@ -78,17 +96,47 @@ load_config() {
 }
 
 validate_config() {
-  is_app_name "$APP_NAME" || { die "Invalid APP_NAME: $APP_NAME"; return 1; }
-  is_username "$DEPLOY_USER" || { die "Invalid DEPLOY_USER: $DEPLOY_USER"; return 1; }
-  is_absolute_safe_path "$APP_ROOT" || { die "APP_ROOT must be a safe absolute path"; return 1; }
-  is_port "$SSH_PORT" || { die "SSH_PORT must be between 1 and 65535"; return 1; }
-  is_positive_integer "$SWAP_SIZE_GB" || { die "SWAP_SIZE_GB must be a positive integer"; return 1; }
-  is_positive_integer "$HEALTHCHECK_ATTEMPTS" || { die "HEALTHCHECK_ATTEMPTS must be positive"; return 1; }
-  is_positive_integer "$HEALTHCHECK_INTERVAL_SECONDS" || { die "HEALTHCHECK_INTERVAL_SECONDS must be positive"; return 1; }
+  is_app_name "$APP_NAME" || {
+    die "Invalid APP_NAME: $APP_NAME"
+    return 1
+  }
+  is_username "$DEPLOY_USER" || {
+    die "Invalid DEPLOY_USER: $DEPLOY_USER"
+    return 1
+  }
+  is_absolute_safe_path "$APP_ROOT" || {
+    die "APP_ROOT must be a safe absolute path"
+    return 1
+  }
+  is_port "$SSH_PORT" || {
+    die "SSH_PORT must be between 1 and 65535"
+    return 1
+  }
+  is_positive_integer "$SWAP_SIZE_GB" || {
+    die "SWAP_SIZE_GB must be a positive integer"
+    return 1
+  }
+  is_positive_integer "$HEALTHCHECK_ATTEMPTS" || {
+    die "HEALTHCHECK_ATTEMPTS must be positive"
+    return 1
+  }
+  is_positive_integer "$HEALTHCHECK_INTERVAL_SECONDS" || {
+    die "HEALTHCHECK_INTERVAL_SECONDS must be positive"
+    return 1
+  }
   local key
   for key in ENABLE_SYSTEM_UPGRADE ENABLE_SWAP ENABLE_UFW ENABLE_FAIL2BAN ENABLE_UNATTENDED_UPGRADES ENABLE_SSH_HARDENING; do
-    is_boolean "${!key}" || { die "$key must be true or false"; return 1; }
+    is_boolean "${!key}" || {
+      die "$key must be true or false"
+      return 1
+    }
   done
-  [[ -n "$GIT_BRANCH" && "$GIT_BRANCH" != -* && "$GIT_BRANCH" != *$'\n'* ]] || { die "Invalid GIT_BRANCH"; return 1; }
-  [[ -z "$GIT_REPOSITORY" || "$GIT_REPOSITORY" != -* ]] || { die "Invalid GIT_REPOSITORY"; return 1; }
+  [[ -n "$GIT_BRANCH" && "$GIT_BRANCH" != -* && "$GIT_BRANCH" != *$'\n'* ]] || {
+    die "Invalid GIT_BRANCH"
+    return 1
+  }
+  [[ -z "$GIT_REPOSITORY" || "$GIT_REPOSITORY" != -* ]] || {
+    die "Invalid GIT_REPOSITORY"
+    return 1
+  }
 }

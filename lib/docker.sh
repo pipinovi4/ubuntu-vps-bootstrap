@@ -6,10 +6,10 @@ install_docker() {
   # shellcheck disable=SC1091
   . /etc/os-release
   codename="$VERSION_CODENAME"
-  run install -m 0755 -d /etc/apt/keyrings
+  run_cmd install -m 0755 -d /etc/apt/keyrings
   if [[ ! -s "$keyring" ]]; then
     if [[ "$DRY_RUN" == "true" ]]; then
-      run curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o "$keyring"
+      run_cmd curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o "$keyring"
     else
       local temp_key
       temp_key="$(mktemp)"
@@ -30,8 +30,8 @@ install_docker() {
       mv -f -- "${list}.tmp" "$list"
     fi
   fi
-  run apt-get update
-  run env DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  run_cmd apt-get update
+  run_cmd env DEBIAN_FRONTEND=noninteractive apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   enable_service docker
   if [[ "$DRY_RUN" != "true" ]]; then
     docker --version

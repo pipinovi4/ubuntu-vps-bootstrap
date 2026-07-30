@@ -20,7 +20,7 @@ configure_unattended_upgrades() {
     record_skipped "unattended upgrades disabled"
     return
   }
-  run env DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive unattended-upgrades
+  run_cmd env DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive unattended-upgrades
   enable_service unattended-upgrades
   record_completed "automatic security updates enabled"
 }
@@ -70,7 +70,7 @@ configure_ssh_hardening() {
     fi
     [[ -z "$previous" ]] || rm -f -- "$previous"
   fi
-  run systemctl reload ssh
+  run_cmd systemctl reload ssh
   record_completed "conservative SSH hardening enabled"
 }
 

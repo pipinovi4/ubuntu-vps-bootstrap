@@ -5,9 +5,9 @@ setup() {
   source "$REPO_ROOT/lib/common.sh"
 }
 
-@test "run prints shell-escaped command in dry-run mode" {
+@test "run_cmd prints shell-escaped command in dry-run mode" {
   DRY_RUN=true
-  run run printf '%s\n' "hello world"
+  run run_cmd printf '%s\n' "hello world"
   [ "$status" -eq 0 ]
   [[ "$output" == *"[DRY-RUN]"* ]]
   [[ "$output" == *"hello\\ world"* ]]

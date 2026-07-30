@@ -21,7 +21,10 @@ main() {
     case "$1" in
       --dry-run) DRY_RUN=true ;;
       --yes) ASSUME_YES=true ;;
-      --help) usage; exit 0 ;;
+      --help)
+        usage
+        exit 0
+        ;;
       *) die "Unknown option: $1" ;;
     esac
     shift
@@ -41,7 +44,7 @@ main() {
   )
   local file
   for file in "${files[@]}"; do
-    if [[ -e "$file" ]]; then run rm -- "$file"; else record_skipped "$file does not exist"; fi
+    if [[ -e "$file" ]]; then run_cmd rm -- "$file"; else record_skipped "$file does not exist"; fi
   done
   if [[ "$DRY_RUN" != "true" ]]; then
     command_exists sshd && sshd -t

@@ -121,13 +121,29 @@ The error trap prints the failing command, line, and status. Correct the reporte
 
 ## Testing
 
+Install the development tools on Ubuntu or WSL:
+
+```bash
+make setup-dev
+```
+
+Then run the local checks:
+
 ```bash
 make format
 make lint
 make test
-make integration-test
 make check
 ```
+
+The container smoke test additionally requires a working Docker daemon:
+
+```bash
+docker version
+make integration-test
+```
+
+With Docker Desktop on Windows, enable **Settings -> Resources -> WSL integration** for the current Ubuntu distribution.
 
 Unit tests cover validators, restricted parsing, dry-run construction, idempotent installation, guarded SSH hardening, deployment locking, and required defaults. The Ubuntu container smoke test covers script loading/help and configuration validation.
 

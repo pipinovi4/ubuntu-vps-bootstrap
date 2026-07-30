@@ -39,7 +39,10 @@ EOF
 parse_args() {
   while (($#)); do
     case "$1" in
-      --help) usage; exit 0 ;;
+      --help)
+        usage
+        exit 0
+        ;;
       --dry-run) DRY_RUN=true ;;
       --verbose) VERBOSE=true ;;
       --harden-ssh) HARDEN_SSH_CLI=true ;;
@@ -73,7 +76,11 @@ print_summary() {
 
 main() {
   parse_args "$@"
-  [[ -f "$CONFIG_FILE" ]] && load_config "$CONFIG_FILE" || warn "Configuration file not found; using safe defaults: $CONFIG_FILE"
+  if [[ -f "$CONFIG_FILE" ]]; then
+    load_config "$CONFIG_FILE"
+  else
+    warn "Configuration file not found; using safe defaults: $CONFIG_FILE"
+  fi
   [[ "$HARDEN_SSH_CLI" == "true" ]] && ENABLE_SSH_HARDENING=true
   [[ "$SKIP_UPGRADE_CLI" == "true" ]] && ENABLE_SYSTEM_UPGRADE=false
   validate_config

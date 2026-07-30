@@ -26,7 +26,10 @@ EOF
 parse_args() {
   while (($#)); do
     case "$1" in
-      --help) usage; exit 0 ;;
+      --help)
+        usage
+        exit 0
+        ;;
       --dry-run) DRY_RUN=true ;;
       --verbose) VERBOSE=true ;;
       --no-build) NO_BUILD=true ;;
@@ -53,11 +56,11 @@ prepare_repository() {
     [[ -n "$GIT_REPOSITORY" ]] || die "GIT_REPOSITORY is required when the application is not cloned"
     [[ ! -e "$app_dir" || -z "$(find "$app_dir" -mindepth 1 -maxdepth 1 -print -quit)" ]] ||
       die "Refusing to clone into a non-empty, non-Git directory: $app_dir"
-    run git clone --branch "$GIT_BRANCH" --single-branch -- "$GIT_REPOSITORY" "$app_dir"
+    run_cmd git clone --branch "$GIT_BRANCH" --single-branch -- "$GIT_REPOSITORY" "$app_dir"
   else
-    run git -C "$app_dir" fetch --prune origin
-    run git -C "$app_dir" checkout "$GIT_BRANCH"
-    run git -C "$app_dir" pull --ff-only origin "$GIT_BRANCH"
+    run_cmd git -C "$app_dir" fetch --prune origin
+    run_cmd git -C "$app_dir" checkout "$GIT_BRANCH"
+    run_cmd git -C "$app_dir" pull --ff-only origin "$GIT_BRANCH"
   fi
 }
 
@@ -110,10 +113,10 @@ main() {
     acquire_deploy_lock "$lock_file"
   fi
   prepare_repository "$app_dir"
-  run docker compose --project-directory "$app_dir" config --quiet
-  run docker compose --project-directory "$app_dir" pull
-  [[ "$NO_BUILD" == "true" ]] || run docker compose --project-directory "$app_dir" build
-  run docker compose --project-directory "$app_dir" up -d --remove-orphans
+  run_cmd docker compose --project-directory "$app_dir" config --quiet
+  run_cmd docker compose --project-directory "$app_dir" pull
+  [[ "$NO_BUILD" == "true" ]] || run_cmd docker compose --project-directory "$app_dir" build
+  run_cmd docker compose --project-directory "$app_dir" up -d --remove-orphans
   if [[ "$DRY_RUN" == "true" ]]; then
     log DRY-RUN "wait for health check at $HEALTHCHECK_URL and write deployment metadata"
   else

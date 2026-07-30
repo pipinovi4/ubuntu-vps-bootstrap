@@ -23,9 +23,9 @@ ensure_root() {
 
 install_packages() {
   local -a packages=(ca-certificates curl git gnupg jq rsync unzip ufw fail2ban unattended-upgrades)
-  run apt-get update
-  if [[ "$ENABLE_SYSTEM_UPGRADE" == "true" ]]; then run env DEBIAN_FRONTEND=noninteractive apt-get upgrade -y; else record_skipped "system package upgrade"; fi
-  run env DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}"
+  run_cmd apt-get update
+  if [[ "$ENABLE_SYSTEM_UPGRADE" == "true" ]]; then run_cmd env DEBIAN_FRONTEND=noninteractive apt-get upgrade -y; else record_skipped "system package upgrade"; fi
+  run_cmd env DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}"
   record_completed "common packages installed"
 }
 
@@ -40,11 +40,11 @@ configure_swap() {
   fi
   local swapfile="/swapfile"
   if [[ ! -f "$swapfile" ]]; then
-    if command_exists fallocate; then run fallocate -l "${SWAP_SIZE_GB}G" "$swapfile"; else run dd if=/dev/zero of="$swapfile" bs=1M count="$((SWAP_SIZE_GB * 1024))" status=progress; fi
+    if command_exists fallocate; then run_cmd fallocate -l "${SWAP_SIZE_GB}G" "$swapfile"; else run_cmd dd if=/dev/zero of="$swapfile" bs=1M count="$((SWAP_SIZE_GB * 1024))" status=progress; fi
   fi
-  run chmod 0600 "$swapfile"
-  run mkswap "$swapfile"
-  run swapon "$swapfile"
+  run_cmd chmod 0600 "$swapfile"
+  run_cmd mkswap "$swapfile"
+  run_cmd swapon "$swapfile"
   if ! grep -Eq '^/swapfile[[:space:]]' /etc/fstab; then
     if [[ "$DRY_RUN" == "true" ]]; then
       log DRY-RUN "append /swapfile entry to /etc/fstab"
@@ -68,10 +68,10 @@ configure_sysctl() {
   sed "s/{{SWAPPINESS}}/10/g" "$SCRIPT_DIR/templates/sysctl.conf" >"$rendered"
   install_if_changed "$rendered" /etc/sysctl.d/99-ubuntu-vps-bootstrap.conf 0644
   rm -f -- "$rendered"
-  run sysctl --system
+  run_cmd sysctl --system
   record_completed "sysctl settings configured"
 }
 
 enable_service() {
-  run systemctl enable --now "$1"
+  run_cmd systemctl enable --now "$1"
 }

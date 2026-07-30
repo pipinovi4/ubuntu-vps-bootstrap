@@ -5,6 +5,7 @@
 *.bak
 *.swp
 .idea/
+.venv/
 .vscode/
 .DS_Store
 deploy-metadata.json
