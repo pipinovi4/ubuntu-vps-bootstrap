@@ -21,14 +21,14 @@ Run bootstrap on Ubuntu Server 24.04 LTS (`amd64` or `arm64`). Ubuntu 22.04 LTS 
 ## Quick start
 
 ```bash
-git clone <toolkit-repository> ubuntu-vps-bootstrap
-cd ubuntu-vps-bootstrap
+git clone https://github.com/pipinovi4/ubuntu-vps-bootstrap /opt/ubuntu-vps-bootstrap
+cd /opt/ubuntu-vps-bootstrap
 cp .env.example .env
 editor .env
 sudo ./bootstrap.sh --dry-run
 sudo ./bootstrap.sh
 sudo -iu deploy
-cd /path/to/ubuntu-vps-bootstrap
+cd /opt/ubuntu-vps-bootstrap
 ./deploy.sh
 ```
 
