@@ -1,0 +1,10 @@
+.env
+*.env
+!.env.example
+*.log
+*.bak
+*.swp
+.idea/
+.vscode/
+.DS_Store
+deploy-metadata.json
