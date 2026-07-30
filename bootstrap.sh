@@ -20,7 +20,9 @@ source "$SCRIPT_DIR/lib/security.sh"
 
 trap 'on_error "$?" "$LINENO" "$BASH_COMMAND"' ERR
 ORIGINAL_ARGS=("$@")
-CONFIG_FILE="$SCRIPT_DIR/.env"
+DEFAULT_CONFIG_FILE="$SCRIPT_DIR/.env"
+readonly DEFAULT_CONFIG_FILE
+CONFIG_FILE="$DEFAULT_CONFIG_FILE"
 HARDEN_SSH_CLI=false
 SKIP_UPGRADE_CLI=false
 
@@ -76,19 +78,27 @@ print_summary() {
 
 main() {
   parse_args "$@"
+  ensure_root
   if [[ -f "$CONFIG_FILE" ]]; then
     load_config "$CONFIG_FILE"
+  elif [[ "$CONFIG_FILE" == "$DEFAULT_CONFIG_FILE" ]]; then
+    ensure_default_config "$SCRIPT_DIR/.env.example" "$CONFIG_FILE"
+    if [[ "$DRY_RUN" != "true" ]]; then
+      load_config "$CONFIG_FILE"
+    fi
   else
-    warn "Configuration file not found; using safe defaults: $CONFIG_FILE"
+    die "Configuration file not found: $CONFIG_FILE"
   fi
   [[ "$HARDEN_SSH_CLI" == "true" ]] && ENABLE_SSH_HARDENING=true
   [[ "$SKIP_UPGRADE_CLI" == "true" ]] && ENABLE_SYSTEM_UPGRADE=false
   validate_config
-  ensure_root
   if [[ "$DRY_RUN" != "true" ]]; then validate_platform; else info "Dry-run: platform validation deferred"; fi
   install_packages
   install_docker
   configure_deploy_user
+  if [[ "$CONFIG_FILE" == "$DEFAULT_CONFIG_FILE" ]]; then
+    secure_default_config "$CONFIG_FILE" "$DEPLOY_USER"
+  fi
   configure_firewall
   configure_fail2ban
   configure_unattended_upgrades

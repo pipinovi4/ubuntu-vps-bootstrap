@@ -57,6 +57,36 @@ trim() {
   printf '%s' "$value"
 }
 
+ensure_default_config() {
+  local example="$1" target="$2"
+  [[ -f "$example" ]] || {
+    die "Default configuration template not found: $example"
+    return 1
+  }
+  if [[ -e "$target" ]]; then
+    record_skipped "$target already exists and will not be overwritten"
+    return 0
+  fi
+  if [[ "$DRY_RUN" == "true" ]]; then
+    log DRY-RUN "create $target from $example with mode 0600"
+    return 0
+  fi
+  install -m 0600 -- "$example" "${target}.tmp"
+  mv -- "${target}.tmp" "$target"
+  record_completed "default configuration created at $target"
+}
+
+secure_default_config() {
+  local target="$1" deploy_user="$2"
+  if [[ ! -e "$target" && "$DRY_RUN" != "true" ]]; then
+    die "Cannot secure missing configuration: $target"
+    return 1
+  fi
+  run_cmd chown "root:${deploy_user}" "$target"
+  run_cmd chmod 0640 "$target"
+  record_completed "configuration access granted to $deploy_user"
+}
+
 load_config() {
   local file="$1" line key value line_number=0
   [[ -f "$file" ]] || {

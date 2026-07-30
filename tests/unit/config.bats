@@ -61,3 +61,29 @@ setup() {
 @test "required configuration validation succeeds for defaults" {
   validate_config
 }
+
+@test "missing default configuration is created with restricted permissions" {
+  local example="$BATS_TEST_TMPDIR/example" target="$BATS_TEST_TMPDIR/.env"
+  printf 'APP_NAME=my-app\n' >"$example"
+  ensure_default_config "$example" "$target"
+  [ "$(cat "$target")" = "APP_NAME=my-app" ]
+  [ "$(stat -c '%a' "$target")" = "600" ]
+}
+
+@test "existing default configuration is never overwritten" {
+  local example="$BATS_TEST_TMPDIR/example" target="$BATS_TEST_TMPDIR/.env"
+  printf 'APP_NAME=new\n' >"$example"
+  printf 'APP_NAME=existing\n' >"$target"
+  ensure_default_config "$example" "$target"
+  [ "$(cat "$target")" = "APP_NAME=existing" ]
+}
+
+@test "dry-run reports configuration creation without writing a file" {
+  local example="$BATS_TEST_TMPDIR/example" target="$BATS_TEST_TMPDIR/.env"
+  printf 'APP_NAME=my-app\n' >"$example"
+  DRY_RUN=true
+  run ensure_default_config "$example" "$target"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"[DRY-RUN]"* ]]
+  [ ! -e "$target" ]
+}

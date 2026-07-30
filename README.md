@@ -10,6 +10,7 @@ A reusable, idempotent Bash toolkit for preparing an Ubuntu VPS and deploying a 
 - UFW rules that allow SSH before activation, plus HTTP and HTTPS
 - Conservative fail2ban, unattended security upgrades, optional swap, sysctl, and log rotation
 - Opt-in SSH hardening gated on a valid deployment-user public key
+- Automatic `.env` creation with safe defaults and restricted deployment-user access
 - Locked, fast-forward-only Git and Docker Compose deployment with health checking
 - Restricted configuration parser that never evaluates `.env` as shell code
 - Conservative uninstall that preserves applications, users, keys, Docker data, and firewall rules
@@ -23,19 +24,16 @@ Run bootstrap on Ubuntu Server 24.04 LTS (`amd64` or `arm64`). Ubuntu 22.04 LTS 
 ```bash
 sudo git clone https://github.com/pipinovi4/ubuntu-vps-bootstrap /opt/ubuntu-vps-bootstrap
 cd /opt/ubuntu-vps-bootstrap
-cp .env.example .env
-editor .env
-sudo ./bootstrap.sh --dry-run
 sudo ./bootstrap.sh
-cd /opt/ubuntu-vps-bootstrap
-./deploy.sh
 ```
 
-Never commit `.env`; it is ignored. The parser permits comments, blank lines, and known `KEY=value` entries. Values may be unquoted or wrapped in matching single/double quotes. Shell substitutions and unknown keys are rejected; interpolation is not supported.
+That single bootstrap command creates `.env` from `.env.example` when needed, installs and configures the server, creates `deploy`, prepares the application directory, and grants `deploy` read access to the configuration. Existing `.env` files are never overwritten.
+
+Never commit `.env`; it is ignored. The generated file is owned by `root:deploy` with mode `0640`. The parser permits comments, blank lines, and known `KEY=value` entries. Values may be unquoted or wrapped in matching single/double quotes. Shell substitutions and unknown keys are rejected; interpolation is not supported.
 
 ## Safe first run
 
-Keep the current SSH session open throughout bootstrap. Review `.env`, confirm `SSH_PORT` matches the listening port, and run `sudo ./bootstrap.sh --dry-run` first. After bootstrap, open and verify a second SSH connection before closing the original session.
+Keep the current SSH session open throughout bootstrap. For a preview, run `sudo ./bootstrap.sh --dry-run`; it reports automatic `.env` creation without writing it. Then run `sudo ./bootstrap.sh`. After bootstrap, open and verify a second SSH connection before closing the original session.
 
 Do not enable SSH hardening on the first run unless the deployment user already has a tested public key. Before `--harden-ssh`, open a second SSH connection as that user. The script refuses password disabling unless `authorized_keys`, ownership, permissions, and `sshd -t` are safe.
 
@@ -67,23 +65,31 @@ Booleans must be exactly `true` or `false`. Usernames, names, ports, paths, and 
 ```bash
 sudo ./bootstrap.sh --help
 sudo ./bootstrap.sh --dry-run --verbose
+sudo ./bootstrap.sh
 sudo ./bootstrap.sh --config /secure/path/server.env
 sudo ./bootstrap.sh --skip-upgrade
 sudo ./bootstrap.sh --harden-ssh
 ```
 
-Reruns avoid duplicate managed configuration and reuse existing users, swap, directories, repository keys, and identical files. Changed managed files receive timestamped backups.
+When the default `.env` is missing, bootstrap creates it automatically from `.env.example`. Reruns never overwrite it and avoid duplicate managed configuration, reusing existing users, swap, directories, repository keys, and identical files. Changed managed system files receive timestamped backups. An explicitly supplied missing `--config` path is treated as an error rather than created automatically.
 
 ## Deploy
 
 Deploy as `DEPLOY_USER`, never root:
 
 ```bash
-./deploy.sh --dry-run
-./deploy.sh
-./deploy.sh --no-build
+sudoedit /opt/ubuntu-vps-bootstrap/.env
+# Set GIT_REPOSITORY and optionally APP_NAME, then:
+sudo ./bootstrap.sh
+sudo -iu deploy bash -lc 'cd /opt/ubuntu-vps-bootstrap && ./deploy.sh --dry-run'
+sudo -iu deploy bash -lc 'cd /opt/ubuntu-vps-bootstrap && ./deploy.sh'
+
+# Optional deployment flags:
+sudo -iu deploy bash -lc 'cd /opt/ubuntu-vps-bootstrap && ./deploy.sh --no-build'
 ./deploy.sh --config /secure/path/deploy.env --verbose
 ```
+
+Only the application repository must be supplied manually because the toolkit cannot safely infer it. If deployment is not needed yet, leave `GIT_REPOSITORY` empty; server bootstrap remains fully functional.
 
 The deploy lock prevents concurrent runs. Existing repositories use fetch, branch checkout, and `pull --ff-only`; new repositories are cloned only into an empty directory. The application `.env` is never created or overwritten. Compose is validated before pull/build/up. After a passing health check, `deploy-metadata.json` records the commit, branch, and UTC time. Failed health checks print the last 100 Compose log lines and return non-zero.
 
