@@ -77,6 +77,7 @@ configure_ssh_hardening() {
 configure_logrotate() {
   local content temp target=/etc/logrotate.d/ubuntu-vps-bootstrap
   content="/var/log/ubuntu-vps-bootstrap.log {
+    su root adm
     weekly
     rotate 4
     compress
